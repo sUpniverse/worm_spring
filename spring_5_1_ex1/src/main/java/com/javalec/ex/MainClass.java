@@ -12,7 +12,7 @@ public class MainClass {
 		StudentInfo studentInfo = ctx.getBean("studentInfo", StudentInfo.class);
 		studentInfo.getStudentInfo();
 		
-		Student student2 = ctx.getBean("student2",Student.class);
+		Student student2 = ctx.getBean("student",Student.class);
 		studentInfo.setStudent(student2);
 		studentInfo.getStudentInfo();
 		

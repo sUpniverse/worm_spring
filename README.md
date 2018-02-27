@@ -37,7 +37,7 @@
 
 - Environment가 각 Property를 가지고 있고 접근한다.
 
-- Context -- ctx.getEnvironmnet() --> Environment --> env.getProperty() --> PropertySource
+- Context --> ctx.getEnvironmnet() --> Environment --> env.getProperty() --> PropertySource
 
 - Project의 성격에 맞게 사용을 해도 안해도 된다.
 
@@ -70,7 +70,6 @@
 
   5. ```java
      GenericXmlApplicatonContext gCtx = (GenericXmlApplicatonContext)ctx;
-
      gCtx.load("applicationCTX.xml");
      gCtx.refresh();
      ```
@@ -158,7 +157,7 @@
     3. ```java
        @Bean 
        public static PropertySourcePlaceholderConfigurer Properties() {
-       PropertySourcePlaceholderConfiguerer configurer = new ~~();
+       PropertySourcePlaceholderConfiguerer configurer = new PropertySourcePlaceholderConfiguerer();
        	Resource[] locations = new Resource[1];
        	location[0] = new ClasspathResouce("admin.properties");
        	configurer.setLocation(locations);
@@ -255,6 +254,7 @@
        	try {
        		Object obj = joinpoint.proceed();
        	}
+       }
        ```
 
        - `jointpoint.proceed()` 를 통해 advice

@@ -85,11 +85,13 @@
 
      - AdminConnection.java 파일을 통해 설정해 준다.
 
-       - EnvironmentAware, InitializingBean을 implements해준다.
+       - ```java
+         implements EnvironmentAware, InitializingBean
+         ```
 
        - ##### 한 어플리케이션에 Environment는 하나만 존재하기 때문에 Environment 객체가 아까 설정한 Environment를 가르키며 그 값을 불러온다. 
 
-         - ##### `private Environment env`를 선언
+         - `private Environment env`를 선언
 
        - `setEnvironment()`를 통해 Environment를 설정해준다.
 
@@ -153,32 +155,30 @@
 
         - 선언을 통해 각 값을 가져옴 xml의 `<property> <value>`설정과 같음
 
-
     3. ```java
-       @Bean 
-       public static PropertySourcePlaceholderConfigurer Properties() {
-       PropertySourcePlaceholderConfiguerer configurer = new PropertySourcePlaceholderConfiguerer();
-       	Resource[] locations = new Resource[1];
-       	location[0] = new ClasspathResouce("admin.properties");
-       	configurer.setLocation(locations);
-       	return configurer;
-       }
-       ```
+        @Bean 
+           public static PropertySourcePlaceholderConfigurer Properties() {
+           PropertySourcePlaceholderConfiguerer configurer = new PropertySourcePlaceholderConfiguerer();
+           	Resource[] locations = new Resource[1];
+           	location[0] = new ClasspathResouce("admin.properties");
+           	configurer.setLocation(locations);
+           	return configurer;
+           }
+        ```
 
-       - 조금 어렵지만, 코드를 해석해보면 전혀 어렵지 않음 각 property값을 location배열에 저장한 다음 configurer에 location을 넣어주고 반환하여 값을 가져오게 함
-       - 잘보면 location변수로 선언한건 `configurer.setLocation`메소드 때문이다.
+        - 조금 어렵지만, 코드를 해석해보면 전혀 어렵지 않음 각 property값을 location배열에 저장한 다음 configurer에 location을 넣어주고 반환하여 값을 가져오게 함
+        - 잘보면 location변수로 선언한건 `configurer.setLocation`메소드 때문이다.
 
     4. ```java
-       @Bean
-       Public AdminConnection adminconfig() {
-       	AdminConnection ad = new AdminConnection()
-       	ad.setAdminId(adminId);
-       }
-       ```
+        @Bean
+           Public AdminConnection adminconfig() {
+           	AdminConnection ad = new AdminConnection()
+           	ad.setAdminId(adminId);
+           }
+        ```
 
-       - 메소드를 만들어 주고 위와같이 configurer를 통해 반환되어 field에 저장된 값을 
+        -  메소드를 만들어 주고 위와같이 configurer를 통해 반환되어 field에 저장된 값을 set을 통하여 하나하나 가져온다.
 
-         set을 통하여 하나하나 가져온다.
 
 #### 8-3. 여러개의 빈을 생성하여 상황에 따라 가져오는 방법
 
@@ -235,9 +235,9 @@
   - Clinet ——> Proxy ——> Target
   - 공통기능을 핵심기능에 바로 적용하는것이 아니라 Proxy에게 요청을 하여 Proxy가 공통기능을 수행하고 핵심기능을 수행한다. 만약 공-핵-공이라고 하면 proxy가 공-핵-공 순으로 실행
 
-- 구현 순서 (XML 기반의 AOP 구현)
+- 구현 순서 - 1 (XML 기반의 AOP 구현) 
 
-  1. 의존 설정(pom.xml)
+  1. 의존 설정(`pom.xml`)
 
      - ```xml
        <dependency>
@@ -259,23 +259,21 @@
 
        - `jointpoint.proceed()` 를 통해 advice
 
-  3. XML설정 파일에 Aspect 설정
-
-  4. bean의 정보가 있는 `CTX.xml` 파일에도 Namespaces의 AOP 체크 후 bean 설정
+  4. bean의 정보가 있는 `CTX.xml` 파일에 Aspect설정 및 Namespaces의 AOP 체크 후 bean 설정
 
      - ```xml
-       <bean id="" class=""></bean>
+       <bean id="logAop" class="com.javalec.ex.LogAop"></bean>
        	<aop:config>
-       		<aop:aspect id="" ref="">
-       			<aop:pointcut expression="" id=""/>
-       			<aop:around pointcut-ref="" method="" />
+       		<aop:aspect id="logger" ref="logAop">
+       			<aop:pointcut expression="within(com.javalec.ex.*)" id="publicM"/>
+       			<aop:around pointcut-ref="publicM" method="loggerAop" />
        		</aop:aspect>
        	</aop:config>
        ```
 
-       - 설정을 통해 proxy가 대행으로 일을 하게 만든다. 각각의 aop설정에 따라
+       - 설정을 통해 proxy가 대행으로 일을 하게 만든다. 각각의 aop 속성 설정에 따라
 
-- Advice 종류
+- Advice 종류 (aop 속성)
 
   - ```xml
     <aop:before> : 메소드 실행 전에 advice실행
@@ -284,3 +282,42 @@
     <aop:after> : 메소드 실행 중 exception이 발생하여도 advice 실행
     <aop:around> : 메소드 실행 전/후 및 exception 발생시 advice 실행
     ```
+
+- 구현순서 -2 (@을 이용한 AOP구현)
+
+  1. `pom.xml` 의존 설정 동일 
+
+  2. 공통 기능의 Advice 클래스 만들기 (클래스 @Aspect선언)
+
+     ```java
+     @Aspect
+     public class LogAop {
+         @Pointcut("within(com.javalec.ex.*)")
+             private void pointcutMethod() {		
+             }		
+
+         @Around("pointcutMethod()")
+             public Object loggerAop(ProceedingJoinPoint joinpoint) throws Throwable {
+             }
+
+         @Before("within(com.javalec.ex.*)")
+             public void beforAdvice() {		
+             }
+     }
+     ```
+
+     - xml에서 했던 aop:config를 Advice 클래스 내에 Pointcut과 Around, Before를 선언해준다 
+     - Around는 핵심메소드 전과 후에 Before는 핵심메소드 전에 실행된다.
+
+  3. `CTX.xml`에 `<aop:aspectj-autoproxy />` 를 추가해 주고 나머지는 다 같다. (단, aop:config는 하지 않는다)
+
+- Aspectj Ponitcut 표현식
+
+  - Pointcut 지정 시 Aspectj 문법을 사용한다.
+    - `*` : 모든
+    - `.` : 현재
+    - `..` : 0개 이상
+    - Execution
+    - within
+    - bean
+

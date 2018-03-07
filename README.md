@@ -321,3 +321,75 @@
     - within
     - bean
 
+
+#### 12. Controller
+
+- 클라이언트의 요청을 처리할 메소드 (보통 대게 처음 Pjt생성시 HomeController로 되어있음)
+
+- Controller의 내부 코드
+
+  ```java
+  @Controller
+  public class MyController {
+  	
+  	@RequestMapping("/view")
+  	public String view() {		
+  		return "view";
+  	}
+  ```
+
+  - `@Controller` 를 해줘야 Dispacher가 controller 인식한다.
+  - `@RequestMapping`을 통해 요청경로(path)를 설정하고 `return` 을 통해 뷰페이지 이름을 반환
+
+- 뷰페이지 이름 생성 방법
+
+  - 뷰페이지 이름 = prefix + 요청처리 메소드 (return ) 반환 값 +  suffix
+
+- 뷰에 데이터 전달 1
+
+  ```java
+  @RequestMapping("/content/contentView")
+  	public String contentView(Model model) {
+  		
+  		model.addAttribute("id","abcde" );
+  		
+  		return "content/contentView";
+  	}
+  ```
+
+  - Model을 파라미터로 넘겨 받은 후 `model.addAttribute`로  데이터 값을 보내준다.
+  - 후 view.jsp에서 `${id}`로 값을 넘겨 받는다.
+
+- 뷰에 데이터 전달 2
+
+  ```java
+  @RequestMapping("/modelAndView/modelView")
+  	public ModelAndView modelAndView() {
+  		
+  		ModelAndView mv = new ModelAndView();
+  		mv.addObject("id", "abcded");
+  		mv.setViewName("/modelAndView/modelView");		
+  		
+  		return mv;
+  	}
+  ```
+
+  - `ModelAndView` 객체를 이용하여 Object 설정 및 View 설정까지 동시에 하고 mv를 return 한다.
+
+- Class 에 `@RequestMapping`
+
+  ```java
+  @Controller
+  @RequestMapping("/board")
+  public class SampleRequestMapping {
+  	
+  	@RequestMapping("/view")
+  	public String view() {
+  				
+  		return "/board/view"; 
+  	}		
+  }
+  ```
+
+  - controller의 /board + /view = /board/view 로 mapping 된다.
+  - 원하는 목적의 controller 제작 후 mapping 하면 될듯? 게시판, 회원 등등?

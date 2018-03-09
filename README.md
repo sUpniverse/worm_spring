@@ -416,7 +416,7 @@
 
 - `@RequestParam`을 이용한 데이터 전송
 
-  - 파라미터의 값이 없다면 무조건 400에러가 발생
+  - url의 값이 없다면 무조건 400에러가 발생 
 
     ```java
     @RequestMapping("/member/confirm")
@@ -454,4 +454,38 @@
     	}
     ```
 
-    - `member/memberOk.jsp`에  데이터가 나타난다 하지만 주소소는 `member/10` 이렇게 되어있다.
+    - `member/memberOk.jsp`에  데이터가 나타난다 하지만 url은 `member/10` 이렇게 되어있다.
+
+#### 14. @RequestMapping 파라미터
+
+- `@RequestMapping` 에서 요청을 받을 때 Get과 Post방식을 구분 할 수 있다.
+
+  ```java
+  	@RequestMapping(value = "/", method = RequestMethod.GET or .Post)
+  	혹은 @RequestMapping("/") 로도 가능
+  	public String home(Locale locale, Model model) {
+  		
+  		model.addAttribute("serverTime", formattedDate );
+  		
+  		return "home";
+  	}
+  ```
+
+- `@ModelAttribute` 를 이용해 객체의 이름을 변경할 수 있다.
+
+  ```java
+  @RequestMapping("/studentView")
+  	public String studentView(@ModelAttribute("studentinfo") StudentInformation studentinformation) {
+  				
+  		return "studentView";
+  	}
+  ```
+
+  - `.jsp` 에서 `${studentinfo}`로 받을 수 있어서 간편히 길이를 줄일 수 있다.
+
+- 리다이렉트 `redirect`
+
+- ```java
+  return redirect:원하는경로(full name도 가능)
+  ```
+

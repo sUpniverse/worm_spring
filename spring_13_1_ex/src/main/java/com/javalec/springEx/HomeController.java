@@ -92,5 +92,5 @@ public class HomeController {
 		
 		return "/member/memberOK";
 	}
-	
+		
 }

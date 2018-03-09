@@ -393,3 +393,65 @@
 
   - controller의 /board + /view = /board/view 로 mapping 된다.
   - 원하는 목적의 controller 제작 후 mapping 하면 될듯? 게시판, 회원 등등?
+
+#### 13.  데이터전송  
+
+- `HttpServletRequest`을 이용한 데이터 전송
+
+  - Model의 경우엔 데이터를 보낼떄, HttpServletRequest는 데이터를 받을때 사용.
+
+    ```java
+    @RequestMapping("/member/memberView")
+    	public String viewMember(HttpServletRequest request, Model model) {
+    		
+    		String id = request.getParameter("id");
+    		String pw = request.getParameter("pw");
+    		
+    		model.addAttribute("id",id);
+    		model.addAttribute("pw", pw);
+            
+    		return "/member/memberView";		
+    	}
+    ```
+
+- `@RequestParam`을 이용한 데이터 전송
+
+  - 파라미터의 값이 없다면 무조건 400에러가 발생
+
+    ```java
+    @RequestMapping("/member/confirm")
+    	public String memberConfirm(@RequestParam("id") String id,@RequestParam("pw") String pw, Model model) {
+    		
+    		model.addAttribute("identify",id);
+    		model.addAttribute("password", pw);
+    		
+    		return "/member/confirm";
+    	}
+    ```
+
+- 데이터(커맨드) 객체
+
+  - 파라미터의 값이 많아 코드의 양이 많기에 DTO를 이용한다.
+
+    ```java
+    @RequestMapping("/join/form")
+    	public String  memberjoin(Member member) {		
+    		
+    		return "/join/form";
+    	}
+    ```
+
+- `@Pathvariable` 
+
+  - 경로에 변수를 넣어 파라미터로 사용
+
+    ```java
+    @RequestMapping("/member/{memberId}")
+    	public String getMember(@PathVariable String memberId, Model model ) {
+    		
+    		model.addAttribute("memberId",memberId);		
+    		return "/member/memberOK";
+    	}
+    ```
+
+    - `member/memberOk.jsp`에  데이터가 나타난다 하지만 주소소는 `member/10` 이렇게 되어있다.

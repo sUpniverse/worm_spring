@@ -121,7 +121,7 @@
 
 
        - 다만 xml 설정이 필요하므로 아래 Namespaces 탭을 이용하여 context에 체크를 하여 설정을 불러온다.
-
+    
     2. ```xml
        <property name=" ">
        	<value> ${admin.id} </value>
@@ -489,3 +489,97 @@
   return redirect:원하는경로(full name도 가능)
   ```
 
+
+#### 15. Validation (검증)
+
+- Server에서 데이터 값을 검증한다.
+
+- Validator를 이용한 검증
+
+  - Controller의 Validator 객체를 이용하여 검증을 한다.
+
+    ```java
+    @Controller
+    public class StudentController {
+    	
+    	@RequestMapping("/student/create")
+    	public String studentCreate(@ModelAttribute("student") Student student, BindingResult result) {
+    		
+            String page = "createDonePage";
+    		
+    		StudentValidator validator = new StudentValidator();
+    		validator.validate(student, result);
+    		if(result.hasErrors()) {
+    			page = "createPage";
+    		}		
+    		return page;
+    	}
+    }
+    ```
+
+    - `BindingResult` : 검증의 결과를 담아주는 객체
+    - ​
+
+  - Validator를 implement 받은 클래스를 만들어 validation 목록을 정의한다.
+
+    ```java
+    public class StudentValidator implements Validator {
+
+    	@Override
+    	public boolean supports(Class<?> arg0) {
+    		return Student.class.isAssignableFrom(arg0);
+    	}
+
+    	@Override
+    	public void validate(Object obj, Errors errors) {
+    		System.out.println("validate()");
+    		Student student  = (Student)obj;
+    		
+    		String studentName = student.getName();
+    		if(studentName == null || studentName.trim().isEmpty()) {
+    			System.out.println("studentName is null or empty");
+    			errors.rejectValue("name", "trouble");
+    		}
+    	}
+    }
+    ```
+
+    - 2개의 메소드를 받으며,  `supports`에선 검증할 객체의 타입정보를 명시, `validate`에선 검증할 것 정의
+    - obj를 통해 무엇이 들어올지 모르니 최상단 객체인 Object 객체로 받는다. 
+    - `Errors`객체는 발생한 에러가 어떠한 것인지 명시하기위해 이용
+
+- `ValidationUtils`를 이용하여 `if()`의 값 검증 대신  사용할 수있다.
+
+  ```java
+  ValidationUtils.rejectIfEmptyOrWhitespace(errors, "name", "trouble");
+  ```
+
+- `@InitBinder`,`@Valid` 를 이용하여 stundentValidator 객체를 만들지 않고 사용하기
+
+  ```java
+  @RequestMapping("/student/create")
+  	public String studentCreate(@ModelAttribute("student") @Valid Student student, BindingResult result) {
+  		String page = "createDonePage";        
+  		if(result.hasErrors()) {
+  			page = "createPage";
+  		}		
+  		return page;
+  	}
+  	
+  	@InitBinder
+  	protected void initBinder(WebDataBinder binder) {
+  		binder.setValidator(new StudentValidator());
+  	}
+  ```
+
+  - `pom.xml` 에 의존성 표시가 필요
+
+    ```xml
+    <dependency>
+    			<groupId>org.hibernate</groupId>
+    			<artifactId>hibernate-validator</artifactId>
+    			<version>4.2.0.Final</version>
+    </dependency>
+    ```
+
+    ​

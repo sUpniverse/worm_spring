@@ -25,4 +25,16 @@
     <!--
     <Manager pathname="" />
     -->
+    
+     <Resource name="mysql"
+     	auth="Container"
+        type="javax.sql.DataSource"
+        username="root"
+        password="22345335"
+        driverClassName="com.mysql.jdbc.Driver"
+        factory="org.apache.tomcat.dbcp.dbcp.BasicDataSourceFactory"
+        url="jdbc:mysql://localhost:3306/springdb"
+        logintimeout="100"
+        maxActive="500"
+        maxIdle="100"/>
 </Context>

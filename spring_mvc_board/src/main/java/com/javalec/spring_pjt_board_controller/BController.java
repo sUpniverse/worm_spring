@@ -21,9 +21,9 @@ public class BController {
 
 	BCommand command;
 	
-	@RequestMapping("/list")
+	@RequestMapping(value = "/list", method = RequestMethod.GET)
 	public String list(Model model) {
-		System.out.println("list()");
+		System.out.println("	list()");
 		
 		command = new BListCommand();
 		command.execute(model);
@@ -47,7 +47,7 @@ public class BController {
 		command = new BWriteCommand();
 		command.execute(model);
 		
-		return "redirect:write";
+		return "redirect:list";
 	}
 	
 	@RequestMapping("/content_view")

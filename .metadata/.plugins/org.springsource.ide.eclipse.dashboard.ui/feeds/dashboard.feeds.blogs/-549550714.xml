@@ -5,7 +5,106 @@
   <link rel="self" href="https://spring.io/blog.atom" />
   <id>http://spring.io/blog.atom</id>
   <icon>https://spring.io/favicon.ico</icon>
-  <updated>2018-04-17T12:21:32Z</updated>
+  <updated>2018-04-18T12:53:04Z</updated>
+  <entry>
+    <title>New in Spring Data Lovelace M2 - Get ready for MongoDB 3.6 and 4.0.</title>
+    <link rel="alternate" href="https://spring.io/blog/2018/04/18/new-in-spring-data-lovelace-m2-get-ready-for-mongodb-3-6-and-4-0" />
+    <category term="engineering" label="Engineering" />
+    <author>
+      <name>Christoph Strobl</name>
+    </author>
+    <id>tag:spring.io,2018-04-10:3242</id>
+    <updated>2018-04-18T12:53:04Z</updated>
+    <content type="html">&lt;p&gt;With the latest Spring Data Lovelace Milestone 2 release, the MongoDB module is stacking up new features that are coming your way in the near future. As you might have followed in the news, &lt;a href="https://www.mongodb.com/transactions"&gt;MongoDB 4&lt;/a&gt; is going to bring ACID transactions to the Document store. The latest MongoDB 3.6 server release already ships with the main building block for those, &lt;a href="https://docs.mongodb.com/manual/release-notes/3.6/#client-sessions"&gt;client sessions&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;You can read all about &lt;a href="https://docs.mongodb.com/manual/core/read-isolation-consistency-recency/#causal-consistency"&gt;isolation levels and causal consistency&lt;/a&gt; in the MongoDB reference. In short, sessions let you execute operations in an order that respects their causal relationships. &lt;/p&gt;
+&lt;p&gt;With Spring Data MongoDB, &lt;code&gt;ClientSession&lt;/code&gt; is right at your fingertips for both the imperative and the reactive world, as we have incorporated those into the already existing &lt;code&gt;MongoOperations&lt;/code&gt; and &lt;code&gt;ReactiveMongoOperations&lt;/code&gt;. To provide you with the utmost control and still enough convenience, managing the &lt;code&gt;ClientSession&lt;/code&gt; lifecycle is up you, while the template takes care of passing the session on to the driver correctly. The following example shows how to create a &lt;code&gt;ClientSession&lt;/code&gt;:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint"&gt;ClientSessionOptions sessionOptions = ClientSessionOptions.builder()&#xD;
+    .causallyConsistent(true)&#xD;
+    .build();&#xD;
+&#xD;
+ClientSession session = client.startSession(sessionOptions);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Once a session is fetched from the MongoDB Java Driver, all you need to do is add it to the template to retrieve session-bound operations and &lt;code&gt;close()&lt;/code&gt; the session when done, as shown in the following example:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint"&gt;MongoOperations sessionBound = template.withSession(session);&#xD;
+&#xD;
+Query query = query(where(&amp;quot;name&amp;quot;).is(&amp;quot;Durzo Blint&amp;quot;)&#xD;
+Person durzo = sessionBound.findOne(query), Person.class);&#xD;
+&#xD;
+Person kylar = new Person(&amp;quot;Kylar Stern&amp;quot;);&#xD;
+kylar.setMaster(durzo);&#xD;
+&#xD;
+sessionBound.insert(kylar);&#xD;
+&#xD;
+session.close();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Using a reactive programming model, the above example looks a bit different, since we&amp;rsquo;re about to obtain a session &lt;code&gt;Publisher&lt;/code&gt; and want to make sure to not resolve it before actually subscribing.&lt;br/&gt;So, instead of obtaining a session-scoped &lt;code&gt;ReactiveMongoTemplate&lt;/code&gt;, we get an instance of &lt;code&gt;ReactiveSessionScoped&lt;/code&gt; that holds a reference to the session &lt;code&gt;Publisher&lt;/code&gt; and offers execution and close handles, so that we can make sure to close the &lt;code&gt;ClientSession&lt;/code&gt; in the &lt;code&gt;finally&lt;/code&gt; block of the returned &lt;code&gt;Flux&lt;/code&gt;, as shown in the following example:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint"&gt;ClientSessionOptions sessionOptions = ClientSessionOptions.builder()&#xD;
+    .causallyConsistent(true)&#xD;
+    .build();&#xD;
+&#xD;
+// obtain a session, but do not subscribe to it&#xD;
+Publisher&amp;lt;ClientSession&amp;gt; session = client.startSession(sessionOptions);&#xD;
+&#xD;
+template.withSession(session)&#xD;
+    .execute(action -&amp;gt; {&#xD;
+&#xD;
+        Query query = query(where(&amp;quot;name&amp;quot;).is(&amp;quot;Durzo Blint&amp;quot;));&#xD;
+        return action.findOne(query, Person.class)&#xD;
+            .flatMap(durzo -&amp;gt; {&#xD;
+&#xD;
+                Person kylar = new Person(&amp;quot;Kylar Stern&amp;quot;);&#xD;
+                kylar.setMaster(durzo);&#xD;
+&#xD;
+                return action.insert(kylar);&#xD;
+            });&#xD;
+    }, ClientSession::close) // make sure we close the session when finished&#xD;
+    .subscribe();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;So far, so good, but didn&amp;rsquo;t we mention transactions at the top of this article? &lt;/p&gt;
+&lt;p&gt;True, transactions will be part of &lt;a href="https://www.mongodb.com/transactions"&gt;MongoDB 4.0&lt;/a&gt; and, yes, we&amp;rsquo;re going to be ready for it. If you want to follow our efforts towards transaction support, make sure to &lt;a href="https://jira.spring.io/browse/DATAMONGO-1920"&gt;follow the development&lt;/a&gt;. Here&amp;rsquo;s a quick glance at what you can expect.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;MongoTransactionManager&lt;/code&gt; will be the gateway to the well known transaction support, allowing applications to use the &lt;a href="http://docs.spring.io/spring/docs/5.0.5/spring-framework-reference/html/transaction.html"&gt;managed transaction&lt;/a&gt; features of Spring.&lt;br/&gt;The &lt;code&gt;MongoTransactionManager&lt;/code&gt; will create and bind a &lt;code&gt;ClientSession&lt;/code&gt; to the thread. Transactions are started, committed, or aborted, while &lt;code&gt;MongoTemplate&lt;/code&gt; automatically detects existing &lt;code&gt;ClientSession&lt;/code&gt;s and operates on them accordingly, as shown in the following example:&lt;/p&gt;
+&lt;pre&gt;&lt;code class="prettyprint"&gt;@Configuration&#xD;
+public class Config extends AbstractMongoConfiguration {&#xD;
+&#xD;
+  @Bean&#xD;
+  MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {&#xD;
+    return new MongoTransactionManager(dbFactory);&#xD;
+  }&#xD;
+&#xD;
+  // ...&#xD;
+}&#xD;
+&#xD;
+@Service&#xD;
+public class NightAngel {&#xD;
+&#xD;
+  @Autowired PersonRepository repository;&#xD;
+&#xD;
+  @Transactional&#xD;
+  public void trainAzoth() {&#xD;
+&#xD;
+    Person durzo = repository.findByName(&amp;quot;Durzo Blint&amp;quot;);&#xD;
+&#xD;
+    Person kylar = new Person(&amp;quot;Kylar Stern&amp;quot;);&#xD;
+    kylar.setMaster(durzo);&#xD;
+&#xD;
+    repository.save(kylar);    &#xD;
+  }&#xD;
+}
+&lt;/code&gt;&lt;/pre&gt;</content>
+  </entry>
+  <entry>
+    <title>Spring Tips: Redis</title>
+    <link rel="alternate" href="https://spring.io/blog/2018/04/18/spring-tips-redis" />
+    <category term="engineering" label="Engineering" />
+    <author>
+      <name>Josh Long</name>
+    </author>
+    <id>tag:spring.io,2018-04-18:3255</id>
+    <updated>2018-04-18T02:20:22Z</updated>
+    <content type="html">&lt;p&gt;speaker: &lt;a href="http://twitter.com/starbuxman"&gt;Josh Long&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Hi Spring fans! In this installment we look at the many facets of Redis, the distributed data structure server. Spring supports Redis through the Spring Cache abstraction, Spring Session, the Spring message-listener container abstraction, and through the Spring Data Redis module.&lt;/p&gt;
+&lt;iframe width="560" height="315" src="https://www.youtube.com/embed/_M8xoagybzU" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen&gt;&lt;/iframe&gt;</content>
+  </entry>
   <entry>
     <title>This Week in Spring - April 17th, 2018</title>
     <link rel="alternate" href="https://spring.io/blog/2018/04/17/this-week-in-spring-april-17th-2018" />
@@ -380,7 +479,7 @@ Most importantly, let us know your feedback and report any issues.&lt;/p&gt;
       <name>Mark Paluch</name>
     </author>
     <id>tag:spring.io,2018-04-10:3243</id>
-    <updated>2018-04-13T14:11:32Z</updated>
+    <updated>2018-04-13T14:11:00Z</updated>
     <content type="html">&lt;p&gt;On behalf of the Spring Data team, I’d like to announce the availability of the second milestone of the Lovelace release train.&lt;/p&gt;
 &lt;p&gt;This release ships with updates for all store modules that contain new features, improvements, and bug fixes. Notable changes include:&lt;/p&gt;
 &lt;ul&gt;
@@ -393,7 +492,7 @@ Most importantly, let us know your feedback and report any issues.&lt;/p&gt;
   &lt;li&gt;Composable repositories support via CDI.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;During the course of Lovelace M2, we decided to increment Spring Data Solr to a new major version number, 4.0 M2, as we upgraded from SolrJ 6.6.2 to 7.2.1.&lt;/p&gt;
-&lt;p&gt;Watch out for a follow-up blog post about MongoDB Transaction support in the coming days.&lt;/p&gt;
+&lt;p&gt;Watch out for a follow-up &lt;a href="https://spring.io/blog/2018/04/18/new-in-spring-data-lovelace-m2-get-ready-for-mongodb-3-6-and-4-0"&gt;blog post about MongoDB Transaction support&lt;/a&gt; in the coming days.&lt;/p&gt;
 &lt;p&gt;With this release, we ship over &lt;a href="https://jira.spring.io/issues/?filter=15838"&gt;200 tickets&lt;/a&gt; fixed. A high-level overview of what has been added can be found in our &lt;a href="https://github.com/spring-projects/spring-data-commons/wiki/Release-Train-Lovelace"&gt;release wiki&lt;/a&gt;. To round things off, here’s the laundry list:&lt;/p&gt;
 &lt;ul&gt;
   &lt;li&gt;Spring Data Commons 2.1 M2 - &lt;a href="https://repo.spring.io/libs-milestone/org/springframework/data/spring-data-commons/2.1.0.M2"&gt;Artifacts&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/commons/docs/2.1.0.M2/api"&gt;JavaDocs&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/commons/docs/2.1.0.M2/reference/html"&gt;Documentation&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/commons/docs/2.1.0.M2/changelog.txt"&gt;Changelog&lt;/a&gt;&lt;/li&gt;
@@ -412,7 +511,8 @@ Most importantly, let us know your feedback and report any issues.&lt;/p&gt;
   &lt;li&gt;Spring Data Elasticsearch 3.1 M2 - &lt;a href="https://repo.spring.io/libs-milestone/org/springframework/data/spring-data-elasticsearch/3.1.0.M2"&gt;Artifacts&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/elasticsearch/docs/3.1.0.M2/api"&gt;JavaDocs&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/elasticsearch/docs/3.1.0.M2/reference/html"&gt;Documentation&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/elasticsearch/docs/3.1.0.M2/changelog.txt"&gt;Changelog&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;Spring Data Couchbase 3.1 M2 - &lt;a href="https://repo.spring.io/libs-milestone/org/springframework/data/spring-data-couchbase/3.1.0.M2"&gt;Artifacts&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/couchbase/docs/3.1.0.M2/api"&gt;JavaDocs&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/couchbase/docs/3.1.0.M2/reference/html"&gt;Documentation&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/couchbase/docs/3.1.0.M2/changelog.txt"&gt;Changelog&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;Spring Data JDBC 1.0 M2 - &lt;a href="https://repo.spring.io/libs-milestone/org/springframework/data/spring-data-jdbc/1.0.0.M2"&gt;Artifacts&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/jdbc/docs/1.0.0.M2/api"&gt;JavaDocs&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/jdbc/docs/1.0.0.M2/reference/html"&gt;Documentation&lt;/a&gt; - &lt;a href="http://docs.spring.io/spring-data/jdbc/docs/1.0.0.M2/changelog.txt"&gt;Changelog&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;</content>
+&lt;/ul&gt;
+&lt;p&gt;Update: Here&amp;rsquo;s the link to the &lt;a href="https://spring.io/blog/2018/04/18/new-in-spring-data-lovelace-m2-get-ready-for-mongodb-3-6-and-4-0"&gt;blog post about MongoDB Client Sessions and Transactions&lt;/a&gt;.&lt;/p&gt;</content>
   </entry>
   <entry>
     <title>Spring Security OAuth 2.3.2 Released</title>
@@ -1200,39 +1300,5 @@ inputSource.poll(System.out::println);
 &lt;/ul&gt;
 &lt;p&gt;The versions of a number of third-party dependencies have also been updated.&lt;/p&gt;
 &lt;p&gt;&lt;a href="http://platform.spring.io/platform"&gt;Project Page&lt;/a&gt; | &lt;a href="https://github.com/spring-io/platform"&gt;GitHub&lt;/a&gt; | &lt;a href="https://github.com/spring-io/platform/issues"&gt;Issues&lt;/a&gt; | &lt;a href="http://docs.spring.io/platform/docs/Brussels-SR8/reference/htmlsingle"&gt;Documentation&lt;/a&gt;&lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <title>Multiple CVE reports published for the Spring Framework</title>
-    <link rel="alternate" href="https://spring.io/blog/2018/04/05/multiple-cve-reports-published-for-the-spring-framework" />
-    <category term="engineering" label="Engineering" />
-    <author>
-      <name>Rossen Stoyanchev</name>
-    </author>
-    <id>tag:spring.io,2018-04-04:3228</id>
-    <updated>2018-04-05T15:43:00Z</updated>
-    <content type="html">&lt;p&gt;&lt;strong&gt;UPDATE 2018-04-09:&lt;/strong&gt; see follow-up &lt;a href="https://spring.io/blog/2018/04/09/cve-2018-1275-address-partial-fix-for-cve-2018-1270"&gt;announcement&lt;/a&gt; for 4.3.x branch.&lt;/p&gt;
-&lt;p&gt;Spring Framework 5.0.5 and 4.3.15 (superseded by 4.3.16 with CVE-2018-1275), &lt;a href="https://spring.io/blog/2018/04/03/spring-framework-5-0-5-and-4-3-15-available-now"&gt;released earlier&lt;/a&gt; this week, include fixes for the following vulnerabilities:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href="https://pivotal.io/security/cve-2018-1270"&gt;CVE-2018-1270&lt;/a&gt; &amp;ndash;&amp;gt; &lt;a href="https://pivotal.io/security/cve-2018-1275"&gt;CVE-2018-1275&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href="https://pivotal.io/security/cve-2018-1271"&gt;CVE-2018-1271&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href="https://pivotal.io/security/cve-2018-1272"&gt;CVE-2018-1272&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Spring Boot 2.0.1 and 1.5.11 (superseded by 1.5.12 with CVE-2018-1275), that match the above Spring Framework versions, were &lt;a href="https://spring.io/blog/2018/04/05/spring-boot-2-0-1-available-now"&gt;released today&lt;/a&gt;, and are now also available for use.&lt;/p&gt;
-&lt;p&gt;Please, review the information in the CVE reports and upgrade immediately. &lt;/p&gt;</content>
-  </entry>
-  <entry>
-    <title>Spring Boot 2.0.1 available now</title>
-    <link rel="alternate" href="https://spring.io/blog/2018/04/05/spring-boot-2-0-1-available-now" />
-    <category term="releases" label="Releases" />
-    <author>
-      <name>Stéphane Nicoll</name>
-    </author>
-    <id>tag:spring.io,2018-04-05:3233</id>
-    <updated>2018-04-05T14:21:00Z</updated>
-    <content type="html">&lt;p&gt;Hot on the heels of &lt;a href="https://spring.io/blog/2018/04/05/spring-boot-1-5-11-available-now"&gt;Spring Boot 1.5.11&lt;/a&gt;, Spring Boot 2.0.1 is now available from &lt;a href="http://repo.spring.io/release"&gt;repo.spring.io&lt;/a&gt; and &lt;a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.springframework.boot%22"&gt;Maven Central&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;The first maintenance release of Spring Boot 2 includes &lt;a href="https://github.com/spring-projects/spring-boot/milestone/98?closed=1"&gt;over 160 fixes, improvements and dependency updates&lt;/a&gt;. Thanks to all that have contributed with issue reports and pull requests.&lt;/p&gt;
-&lt;p&gt;Note that the Spring Framework versions included in both Spring Boot releases contain fixes that address multiple vulnerability reports. Please see this &lt;a href="https://spring.io/blog/2018/04/05/multiple-cve-reports-published-for-the-spring-framework"&gt;blog post&lt;/a&gt; for more details.&lt;/p&gt;&lt;h3&gt;&lt;a href="#how-can-you-help" class="anchor" name="how-can-you-help"&gt;&lt;/a&gt;How can you help?&lt;/h3&gt;
-&lt;p&gt;If you&amp;rsquo;re interested in helping out, check out the &lt;a href="https://github.com/spring-projects/spring-boot/labels/status%3A%20ideal-for-contribution"&gt;&amp;ldquo;ideal for contribution&amp;rdquo; tag&lt;/a&gt; in the issue repository. If you have general questions, please ask on &lt;a href="http://stackoverflow.com"&gt;stackoverflow.com&lt;/a&gt; using the &lt;a href="http://stackoverflow.com/tags/spring-boot"&gt;&lt;code&gt;spring-boot&lt;/code&gt; tag&lt;/a&gt; or chat with the community on &lt;a href="https://gitter.im/spring-projects/spring-boot"&gt;Gitter&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;&lt;a href="http://projects.spring.io/spring-boot/"&gt;Project Page&lt;/a&gt; | &lt;a href="https://github.com/spring-projects/spring-boot"&gt;GitHub&lt;/a&gt; | &lt;a href="https://github.com/spring-projects/spring-boot/issues"&gt;Issues&lt;/a&gt; | &lt;a href="http://docs.spring.io/spring-boot/docs/2.0.1.RELEASE/reference/htmlsingle"&gt;Documentation&lt;/a&gt; | &lt;a href="http://stackoverflow.com/questions/tagged/spring-boot"&gt;Stack Overflow&lt;/a&gt; | &lt;a href="https://gitter.im/spring-projects/spring-boot"&gt;Gitter&lt;/a&gt;&lt;/p&gt;</content>
   </entry>
 </feed>

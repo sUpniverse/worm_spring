@@ -22,18 +22,18 @@
 				</tr>
 				<tr>
 					<td>이름</td>
-					<td>${content_view.bName}</td>					
+					<td><input type="text" name="bName" value="${content_view.bName}"></td>					
 				</tr>
 				<tr>
 					<td>제목</td>
-					<td>${content_view.bTitle}</td>					
+					<td><input type="text" name="bTitle" value="${content_view.bTitle}"></td>					
 				</tr>
 				<tr>
 					<td>내용</td>
-					<td><textarea>${content_view.bContent}</textarea>					
+					<td><textarea row="10" name="bContent">${content_view.bContent}</textarea>					
 				</tr>
 				<tr>
-				<td colspan="2"> <input type="submit" value="수정">&nbsp;&nbsp; <a href="list">목록보기</a>&nbsp;&nbsp; <a href="delete?bId=${cotent_view.bId}">삭제</a> &nbsp;&nbsp;<a href="reply?">답변</a></td>
+				<td colspan="2"> <input type="submit" value="수정">&nbsp;&nbsp; <a href="list">목록보기</a>&nbsp;&nbsp; <a href="delete?bId=${content_view.bId}">삭제</a> &nbsp;&nbsp;<a href="reply?">답변</a></td>
 				</tr>			
 			</form>		
 		</td>	

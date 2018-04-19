@@ -176,7 +176,7 @@ public class BDao {
 			String query = "delete from mvc_board where bId =?";
 			pstmt = con.prepareStatement(query);
 			pstmt.setInt(1, Integer.parseInt(bId));	
-			pstmt.executeQuery();
+			int rn = pstmt.executeUpdate();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -185,6 +185,32 @@ public class BDao {
 				if(con != null) con.close();
 			} catch (Exception e2) {
 				// TODO: handle exception
+			}
+		}
+		
+	}
+	
+	public void modify(String bId,String bName, String bTitle, String bContent) {
+		
+		Connection con = null;
+		PreparedStatement pstmt = null;
+		try {
+			con = dataSource.getConnection();
+			String query = "update mvc_board set bName =? , bTitle =?, bContent = ? where bId = ? ";			
+			pstmt = con.prepareStatement(query);
+			pstmt.setString(1, bName);
+			pstmt.setString(2, bTitle);
+			pstmt.setString(3, bContent);
+			pstmt.setInt(4, Integer.parseInt(bId));
+			int rs = pstmt.executeUpdate();
+		} catch (Exception e) {			
+			e.printStackTrace();
+		} finally {
+			try {
+				if(pstmt != null) pstmt.close();
+				if(con != null) pstmt.close();
+			} catch (Exception e2) {
+				e2.printStackTrace();
 			}
 		}
 		

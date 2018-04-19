@@ -98,8 +98,8 @@ public class BController {
 	@RequestMapping("/delete")
 	public String delete(HttpServletRequest request,Model model) {
 		System.out.println("delete()");
-		model.addAttribute("request", request);
 		
+		model.addAttribute("request", request);		
 		command = new BDeleteCommand();
 		command.execute(model);
 		

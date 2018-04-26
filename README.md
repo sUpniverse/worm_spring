@@ -118,22 +118,19 @@
        ```
 
        - 사용하여 아까와 마찬가지로 만들어논 properties에 접근
-
-
        - 다만 xml 설정이 필요하므로 아래 Namespaces 탭을 이용하여 context에 체크를 하여 설정을 불러온다.
-    
+
     2. ```xml
        <property name=" ">
-       	<value> ${admin.id} </value>
+          	<value> ${admin.id} </value>
        </property>
        ```
 
-  - 다른 adminConnection.java 파일은 Environment를 사용하지 않으므로 InitializingBean, DisposableBean만 implements하여 set과 destroy만 해주면 된다.
+       - 다른 adminConnection.java 파일은 Environment를 사용하지 않으므로 InitializingBean, DisposableBean만 implements하여 set과 destroy만 해주면 된다.
 
-  - ctx.close() 
+         - ctx.close() 
 
-
-- Java파일을 이용한 설정
+       - Java파일을 이용한 설정
 
   - ```java
     AnnotationConfigApplication ctx = new AnnotationConfigApplication(ApplicationConfig.class)
@@ -518,7 +515,6 @@
     ```
 
     - `BindingResult` : 검증의 결과를 담아주는 객체
-    - ​
 
   - Validator를 implement 받은 클래스를 만들어 validation 목록을 정의한다.
 
@@ -583,7 +579,84 @@
     ```
 
 
-#### 16-1. MVC 
+#### 20. JDBC를 이용해서 코드 간소화
 
-- ​
+- JdbcTemplate 빈을 만들어서 간편하게 사용한다.
+
+  - 방법 
+
+    - `pom.xml` dependency를 추가해준다.
+
+      ```xml
+        <dependency>
+         <groupId>org.springframework</groupId>
+         <artifactId>spring-jdbc</artifactId>
+         <version>${org.springframework-version}</version>
+        </dependency>
+      ```
+
+    - controller에 Jdbc template를 추가 
+
+      ```java
+      public JdbcTemplate template;				//전역변수
+      	
+      	public void setTemplate(JdbcTemplate template) {
+      		this.template = template;
+      	}
+      ```
+
+    - `appServlet/servlet-context.xml` 에 bean을 추가해준다
+
+      ```xml
+      <beans:bean name="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+      		<beans:property name="driverClassName" value="com.mysql.jdbc.Driver"></beans:property>
+      		<beans:property name="url" value="jdbc:mysql://localhost:3306/springdb"></beans:property>
+      		<beans:property name="username" value="root"></beans:property>
+      		<beans:property name="password" value="22345335"></beans:property>
+          </beans:bean>
+
+      <!-- dataSource의 정보를 입력해 놓고 template 빈을 만들어 ref로 가져온다. -->
+
+          <beans:bean name="template" class="org.springframework.jdbc.core.JdbcTemplate">
+          		<beans:property name="dataSource" ref="dataSource"></beans:property>    
+          </beans:bean>	
+      ```
+
+    - 해당 bean을 찾을 수 있도록 @Autowired를 추가하고, util class를 통해 저장해 둔다.
+
+      ```Java
+      /* Dao class 내부  */
+      public JdbcTemplate template;
+
+      @Autowired  //위와 비교하여 새로 추가된 부분 template를 자동으로 set하기 위함이다.
+      public void setTemplate(JdbcTemplate template) {
+          this.template = template;
+          Constant.template = this.template;  // 새로 추가된 부분
+      }
+      ```
+      ```java
+      /* Constant 클래스를 만들러 선언 */
+      public class Constant {
+      	public static JdbcTemplate template;
+      }
+      ```
+
+    -  mvc 게시판을 이용해서 만든 list, write, modify, delete 를 쉽게 바꾼다. (template를 이용한다.)
+
+       ```java
+       /* list */
+       template.query(query,new BeanPropertyRowMapper<BDto>(BDto.class));
+
+       /* view */
+       template.queryForObject(query, new BeanPropertyRowMapper<BDto>(BDto.class));
+
+       /* write */
+       template.update(new PreparedStatementCreator());
+
+       /* modify, delete */
+       template.update(query,new PreparedStatementSetter());
+       ```
+
+       - Write, modify, delete는 Anonymous class를 만들어 class 내부를 완성한다.
+       - 여기서의 query는 사용자가 직접 String query를 이용해 만든다.
 

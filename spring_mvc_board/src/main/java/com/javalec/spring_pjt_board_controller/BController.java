@@ -2,11 +2,14 @@ package com.javalec.spring_pjt_board_controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.javalec.spring_pjt_board.util.Constant;
 import com.javalec.spring_pjt_board_command.BCommand;
 import com.javalec.spring_pjt_board_command.BContentCommand;
 import com.javalec.spring_pjt_board_command.BDeleteCommand;
@@ -21,7 +24,16 @@ public class BController {
 
 	BCommand command;
 	
-	@RequestMapping(value = "/list", method = RequestMethod.GET)
+	public JdbcTemplate template;
+		
+	@Autowired
+	public void setTemplate(JdbcTemplate template) {
+		this.template = template;
+		Constant.template = this.template;
+	}
+	
+	
+	@RequestMapping(value = "/list")
 	public String list(Model model) {
 		System.out.println("	list()");
 		

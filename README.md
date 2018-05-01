@@ -660,3 +660,64 @@
        - Write, modify, delete는 Anonymous class를 만들어 class 내부를 완성한다.
        - 여기서의 query는 사용자가 직접 String query를 이용해 만든다.
 
+
+#### 22. 트랜잭션
+
+- 가령 좌석 예매를 위해 결제를 한다고 가정했을때, 카드로는 결제가 되었지만 서버오류로 DB상에는 안된다고 했을때
+
+  Rollback을 해야한다. 그렇기 때문에 정상 - Commit , 오류 - Rollback을 실행하는 구조를 만들어야 한다.
+
+  - PlatformTransactionManager 인터페이스 를 이용
+
+  - TransactionTemplate 클래스를 이용
+
+    ```java
+    TransactionTemplate transactiontemplate;
+    /* transaction class 선언과 setter를 선언 해준다. */
+    public void setTransactionTemplate(TransactionTemplate transactiontemplate) {
+        this.transactiontemplate = transactiontemplate
+    }
+
+    /* 위 선언후 트랜잭션을 원하는 부분에 아래와 같이 넣는다 */
+    transactiontemplate.excute(new TransactionCallbackWithoutResult() {
+        @Override
+        protected void doInTransactionWithoutResult(TransactionStatus status) {
+    		/* 실행문 삽입 */     
+        }    
+    });
+    ```
+
+    ```xml
+    <!-- servelt-contex.xml -->
+    <beans:bean name="transactionManager" class="~~" >
+    	<beans:property name="dataSource" ref="dataSource"/>
+    </beans:bean>
+    <beans:bean name="transactionTemplate" class="~~" >
+    	<beans:property name="transactionManager" ref="transactionManager"/>
+    </beans:bean>
+    ```
+
+- 트랜잭션 전파속성
+
+  - 2개 이상의 트랜잭션이 작동할때 , 전체 트랜잭션이 동작하는 방식
+
+    ```xml
+    <beans:bean name="transactionTemplate" class="~~" >
+    	<beans:property name="transactionManager" ref="transactionManager"/>
+        <!-- 아래 구문을 추가하여 전파속성을 추가해준다. value의 값을 이용하여 -->
+        <beans:property name="propagationBehavior" value="?" />
+    </beans:bean>
+    ```
+
+    - REQUIRED(0) : 부모 트랜잭션 내에서 실행하며 부모 트랜잭션이 없을 경우 새로운 트랜잭션을 생성
+      - 문제 발생시 전체 Rollback을 실행
+    - SUPPORT(1) : 부모 트랜잭션 내에서 실행하며 부모 트랜잭션이 없을 경우 nontransactionally로 실행
+    - MANDATORY(2) : 부모 트랜잭션 내에서 실행되며 부모 트랜잭션이 없을 경우 예외가 발생
+    - REQUIRES_NEW(3) : 부모 트랜잭션을 무시하고 무조건 새로운 트랜잭션이 생성
+      - 서로 각각 트랜잭션 처리
+    - NOT_SUPPORT(4) : nontransactionally로 실행하며 부모 트랜잭션 내에서 실행될 경우 일시 정지
+      - 트랜잭션이 없는것과 동일
+    - NEVER(5) : nontransactionally로 실행되며 부모 트랜잭션이 존재한다면 예외가 발생
+    - NESTED : 해당 메서드가 부모 트랜잭션에서 진행될 경우 별개로 커밋되거나 롤백될 수 있다. 둘러싼 트랜잭션이 없을 경우 REQUIRED와 동일하게 작동한다.
+
+    ​

@@ -105,7 +105,7 @@
 
        - 호출 순서 setEnvironment() -> afterPropertieSet ()
 
-####8-2. Xml or Java파일을 이용하여 외부파일 이용 설정 (Environment 사용X) 
+#### 8-2. Xml or Java파일을 이용하여 외부파일 이용 설정 (Environment 사용X)
 
 - XML을 이용한 설정
 
@@ -720,4 +720,86 @@
     - NEVER(5) : nontransactionally로 실행되며 부모 트랜잭션이 존재한다면 예외가 발생
     - NESTED : 해당 메서드가 부모 트랜잭션에서 진행될 경우 별개로 커밋되거나 롤백될 수 있다. 둘러싼 트랜잭션이 없을 경우 REQUIRED와 동일하게 작동한다.
 
-    ​
+
+#### 25. Security
+
+- `Pom.xml`에 dependency 추가하기 ( spring framework와 security의 version을 맞추어야 한다 꼭!!!!)
+
+  - projects.spring.io 를 통해 security의 dependency를 복사해온다. (그 후에 밑으로 `core`, `config`도 추가)
+  - 혹은 pom.xml의 dependencies 메뉴를 통해 security 검색 후 추가 (근데 검색이 안된다 직접 넣는걸 추천)
+
+- `security-context.xml` 파일 생성하기 (xsd-security를 추가하려면 반드시 `config`를 위에서 넣어줘야함)
+
+  - `appServlet/` 하위에 xml파일을 생성한다.  new - Spring Bean Configuration File - security 선택
+
+  - `web.xml`의 context-parm에 `security-context.xml`의 경로 넣어주기 
+
+  - 각종 선언을 통해 사용한다. (몇가지의 예)
+
+    ```xml
+    <!-- http로 들어오는 것에 대해 보안을 설정하겠다. -->
+    <security:http auto-config="true">
+        <!-- 해당 url로 들어오는것에 대해 한번 룰에따른 심사를 한다. 보통 ROLE_xxx로 access명 표기 -->
+        <security:intercept-url pattern="/login.html" access="hasRole('ROLE_USER')"/>
+        <security:intercept-url pattern="/welcome.html"access="hasRole('ROLE_ADMIN')"/>
+    </security:http>
+
+    <!-- ROLE 설정 security 5 부터는 암호화로인해 식별자 정보 필요, 안쓴다면 {noop}을 앞에 써여함 -->
+    <security:authentication-manager>
+        <security:authentication-provider>
+            <security:user-service>
+                <security:user name="user" password="{noop}123" authorities="hasRole('ROLE_USER')"/>
+                <security:user name="admin" password="{noop}123" authorities="hasRole('ROLE_ADMIN')"/>
+            </security:user-service>
+        </security:authentication-provider>	
+    </security:authentication-manager>
+    ```
+
+  - `web.xml`에 filter를 넣어주어야 한다.
+
+    ```xml
+    <filter>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>springSecurityFilterChain</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    ```
+
+- 로그인, 로그아웃을 위한 페이지 구성
+
+  - `security-context.xml` 
+
+    ```xml
+    <!-- 위와 같은 부분은 생략.. 추가 부분만 -->
+    <security:http auto-config="true">
+    	<security:form-login login-page="/loginForm.html" />
+        <security:logout logout-success-url="/loginForm.html" />
+        <security:intercept-url />
+    </security:http>
+    ```
+
+  - 로그인 및 로그아웃 설정 CSRF로 인해 둘다 hidden이 필요하고 로그아웃도 마찬가지
+
+    ```html
+    <!-- 로그인-->
+    <c:url var="loginUrl" value="/login" />
+    <form action="${loginUrl}" method="post">
+         <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+    </form>
+
+    <!-- 로그아웃 -->
+    <c:url var="logoutUrl" value="/logout"/>
+    <form action="${logoutUrl}" 	method="post">
+        <input type="submit" value="Log out" />
+        <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+    </form>
+    ```
+
+- taglib 사용법
+
+  - depedency에 taglib를 추가해 준다. (web,core 등과 같이)
+  - 사용할곳에 taglib를 선언해 준다.
+  - API **Table 27.1. Common built-in expressions**를 참고하여 사용

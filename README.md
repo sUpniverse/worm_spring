@@ -578,6 +578,10 @@
     </dependency>
     ```
 
+#### *** My Sql sequence 사용 ***
+
+- seq.nextval 은 auto_increment 속성을 table 생성시에 사용
+- seq.currval은 query문에 (select max(id) +1 table명); 이렇게 해서 구해올 수 있다.
 
 #### 20. JDBC를 이용해서 코드 간소화
 
@@ -803,3 +807,111 @@
   - depedency에 taglib를 추가해 준다. (web,core 등과 같이)
   - 사용할곳에 taglib를 선언해 준다.
   - API **Table 27.1. Common built-in expressions**를 참고하여 사용
+
+#### 28. mybatis
+
+- mybatis를 사용하기 위해 먼저 bean설정이 필요
+
+  ```xml
+  <!-- jdbc 및 template 관련 설정은 20번을 참고 -->
+  <beans:bean name="dao" class="com.javalec.springex.dao.ContentDao">
+  		<beans:property name="template" ref="template"></beans:property>
+  </beans:bean>
+  	
+  <beans:bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+  	<beans:property name="dataSource" ref="dataSource"></beans:property>
+      <beans:property name="mapperLocations"  value="classpath:com/javalec/springex/dao/mapper/*.xml">
+      </beans:property>
+  </beans:bean>
+  	
+  <beans:bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+  	<beans:constructor-arg index="0" ref="sqlSessionFactory"></beans:constructor-arg>
+  </beans:bean>
+  ```
+
+  
+
+- Mapper를 사용하기 위해 Dao interface객체를 만들어 준다.
+
+  - 그후 .xml (이름은 마음대로 예제는 IDao.xml) 을 생성해준다. 
+
+  - 생성된 xml파일에 <mapper> 태그를 추가해준다. 
+
+  - <mapper>태그 하위로 <select>,<insert>,<delete>등의 태그를 추가해준다.
+
+    ```xml
+    <!DOCTYPE mapper
+      PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+      "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+    <mapper namespace="com.javalec.springex.dao.IDao">
+      <select id="listDao" resultType="com.javalec.springex.dto.ContentDto">
+        SELECT * FROM BOARD ORDER BY MID DESC
+      </select>
+    </mapper>
+    ```
+
+  - 추가한후 각 태그에 원하는 resultType등을 지정해주고 query문을 넣어주면 된다.
+
+- 해당하는 Dao는 모두 Mapper를 통해 선언되었으므로, dao를 따로 만들지 않고 가져다가 사용한다.
+
+  - 단 여기서 sqlSession을 새로 만들어서 사용해야 한다.
+
+    ```java
+    @Autowired
+    private SqlSession sqlSession;
+    ```
+
+
+
+
+
+#### 오류사항들 정리!!!
+
+- Spring dependencies 버전의 문제
+
+  ```
+  org.springframework.web.servlet.DispatcherServlet - Context initialization failed
+  ```
+
+  - org.springframework.web.servlet.DispatcherServlet - Context initialization failed
+
+  ```
+   According to TLD or attribute directive in tag file, attribute [items] does not accept any expressions
+  ```
+
+  - jstl의 버전 문제로 jstl 버전 or taglib의 주소를 제대로 넣어줘야한다. 
+
+- 한글 인코딩 문제
+
+  ```Xml
+  <filter>
+          <filter-name>encodingFilter</filter-name>
+          <filter-class>
+              org.springframework.web.filter.CharacterEncodingFilter
+      </filter-class>
+      <init-param>
+              <param-name>encoding</param-name>
+              <param-value>UTF-8</param-value>
+          </init-param>
+  	</filter>
+  	<filter-mapping>
+  	        <filter-name>encodingFilter</filter-name>
+  	        <url-pattern>/*</url-pattern>
+  	</filter-mapping>
+  ```
+
+  - Web.xml 로 가서 위의 filter를 추가해 준다. 물론 mysql이나 jsp상에서 utf-8 설정이 안되어 있는걸 수도
+
+  
+
+
+
+
+
+
+
+
+
+
+

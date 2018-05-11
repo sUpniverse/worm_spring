@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.javalec.springex.dao.IDao">
+  <select id="listDao" resultType="com.javalec.springex.dto.ContentDto">
+    SELECT * FROM BOARD ORDER BY MID DESC
+  </select>
+</mapper>

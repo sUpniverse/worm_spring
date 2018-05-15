@@ -7,4 +7,13 @@
   <select id="listDao" resultType="com.javalec.springex.dto.ContentDto">
     SELECT * FROM BOARD ORDER BY MID DESC
   </select>
+  
+  <insert id="writeDao">
+  	Insert into board (mWriter,mContent) values (#{param1}, #{param2})
+  </insert>
+  
+  <delete id="deleteDao">
+  	delete from board where mId = #{param1}
+  </delete>
+  
 </mapper>

@@ -833,9 +833,9 @@
 
   - 그후 .xml (이름은 마음대로 예제는 IDao.xml) 을 생성해준다. 
 
-  - 생성된 xml파일에 <mapper> 태그를 추가해준다. 
+  - 생성된 xml파일에 `<mapper>` 태그를 추가해준다. 
 
-  - <mapper>태그 하위로 <select>,<insert>,<delete>등의 태그를 추가해준다.
+  - `<mapper>`태그 하위로 `<select>,<insert>,<delete>`등의 태그를 추가해준다.
 
     ```xml
     <!DOCTYPE mapper

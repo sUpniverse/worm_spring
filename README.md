@@ -1,6 +1,6 @@
 ## Spring 꿈틀거리기
 
-#### 7-1. 생명주기
+### 7-1. 생명주기
 
 - 생성 -> 설정 -> 사용 -> 종료
   - 생성
@@ -12,7 +12,9 @@
   -  종료
     - `생성된 객체.close()`
 
-#### 7-2. 빈 생명주기
+
+
+### 7-2. 빈 생명주기
 
 - `implements InitializingBean, DisposableBean`를 통해 생명주기 설정
   - `public void afterPropertiesSet()`  -> 객체.refresh() 과정에서 호출되는 부분
@@ -20,7 +22,9 @@
 - 메소드를 만든후 @PostConstruct, @PreDestroy 이용하여 설정
   - 임의의 init, destroy 메소를 만든후 @PostConstruct, @PreDestroy를 이용하여 선언
 
-#### 7-3. 빈 범위 (scope)
+    
+
+### 7-3. 빈 범위 (scope)
 
 - 컨테이너가 생성되고, 빈이 생성될 때, 생성된 빈은 scope를 가짐 (영향을 끼치는 범위)
   - <bean> 선언시 scope를 통해 설정가능
@@ -31,7 +35,8 @@
     - default일 경우엔 (scope를 지정하지 않을 경우는 singleton이 default)
 
 
-#### 8-1. Environment 객체를 이용한 외부파일 가져온 후 설정
+
+### 8-1. Environment 객체를 이용한 외부파일 가져온 후 설정
 
 - Environment가 각 Property를 가지고 있고 접근한다.
 
@@ -103,7 +108,9 @@
 
        - 호출 순서 setEnvironment() -> afterPropertieSet ()
 
-#### 8-2. Xml or Java파일을 이용하여 외부파일 이용 설정 (Environment 사용X)
+
+
+### 8-2. Xml or Java파일을 이용하여 외부파일 이용 설정 (Environment 사용X)
 
 - XML을 이용한 설정
 
@@ -175,7 +182,8 @@
         -  메소드를 만들어 주고 위와같이 configurer를 통해 반환되어 field에 저장된 값을 set을 통하여 하나하나 가져온다.
 
 
-#### 8-3. 여러개의 빈을 생성하여 상황에 따라 가져오는 방법
+
+### 8-3. 여러개의 빈을 생성하여 상황에 따라 가져오는 방법
 
 - 입력되는 값에 따라 bean을 선택하여 가져 온다.
 
@@ -213,7 +221,8 @@
 -  개발환경에 따른 설정파일을 설정해 주어서 각 개발단계에서 OS의 시스템 값을 읽은 후 OS에 따른 설정 값을 가져와서 구동하면 편리하게 사용할 수 있다.
 
 
-#### 9. AOP (Aspect Oriented Programming)
+
+### 9. AOP (Aspect Oriented Programming)
 
 - 공통기능에 상속을 활용하는 방법에는 한계가 있어서 AOP가 등장하게 됨
 
@@ -317,7 +326,8 @@
     - bean
 
 
-#### 12. Controller
+
+### 12. Controller
 
 - 클라이언트의 요청을 처리할 메소드 (보통 대게 처음 Pjt생성시 HomeController로 되어있음)
 
@@ -389,7 +399,9 @@
   - controller의 /board + /view = /board/view 로 mapping 된다.
   - 원하는 목적의 controller 제작 후 mapping 하면 될듯? 게시판, 회원 등등?
 
-#### 13.  데이터전송  
+
+
+### 13.  데이터전송
 
 - `HttpServletRequest`을 이용한 데이터 전송
 
@@ -485,7 +497,8 @@
   ```
 
 
-#### 15. Validation (검증)
+
+### 15. Validation (검증)
 
 - Server에서 데이터 값을 검증한다.
 
@@ -579,9 +592,12 @@
 #### *** My Sql sequence 사용 ***
 
 - seq.nextval 은 auto_increment 속성을 table 생성시에 사용
+
 - seq.currval은 query문에 (select max(id) +1 table명); 이렇게 해서 구해올 수 있다.
 
-#### 20. JDBC를 이용해서 코드 간소화
+  
+
+### 20. JDBC를 이용해서 코드 간소화
 
 - JdbcTemplate 빈을 만들어서 간편하게 사용한다.
 
@@ -616,9 +632,9 @@
       		<beans:property name="username" value="root"></beans:property>
       		<beans:property name="password" value="22345335"></beans:property>
           </beans:bean>
-
+      
       <!-- dataSource의 정보를 입력해 놓고 template 빈을 만들어 ref로 가져온다. -->
-
+      
           <beans:bean name="template" class="org.springframework.jdbc.core.JdbcTemplate">
           		<beans:property name="dataSource" ref="dataSource"></beans:property>    
           </beans:bean>	
@@ -629,7 +645,7 @@
       ```Java
       /* Dao class 내부  */
       public JdbcTemplate template;
-
+      
       @Autowired  //위와 비교하여 새로 추가된 부분 template를 자동으로 set하기 위함이다.
       public void setTemplate(JdbcTemplate template) {
           this.template = template;
@@ -643,27 +659,29 @@
       }
       ```
 
-    -  mvc 게시판을 이용해서 만든 list, write, modify, delete 를 쉽게 바꾼다. (template를 이용한다.)
+    - mvc 게시판을 이용해서 만든 list, write, modify, delete 를 쉽게 바꾼다. (template를 이용한다.)
 
        ```java
        /* list */
        template.query(query,new BeanPropertyRowMapper<BDto>(BDto.class));
-
+       
        /* view */
        template.queryForObject(query, new BeanPropertyRowMapper<BDto>(BDto.class));
-
+       
        /* write */
        template.update(new PreparedStatementCreator());
-
+       
        /* modify, delete */
        template.update(query,new PreparedStatementSetter());
        ```
 
        - Write, modify, delete는 Anonymous class를 만들어 class 내부를 완성한다.
+
        - 여기서의 query는 사용자가 직접 String query를 이용해 만든다.
 
+         
 
-#### 22. 트랜잭션
+### 22. 트랜잭션
 
 - 가령 좌석 예매를 위해 결제를 한다고 가정했을때, 카드로는 결제가 되었지만 서버오류로 DB상에는 안된다고 했을때
 
@@ -722,8 +740,7 @@
     - NEVER(5) : nontransactionally로 실행되며 부모 트랜잭션이 존재한다면 예외가 발생
     - NESTED : 해당 메서드가 부모 트랜잭션에서 진행될 경우 별개로 커밋되거나 롤백될 수 있다. 둘러싼 트랜잭션이 없을 경우 REQUIRED와 동일하게 작동한다.
 
-
-#### 25. Security
+### 25. Security
 
 - `Pom.xml`에 dependency 추가하기 ( spring framework와 security의 version을 맞추어야 한다 꼭!!!!)
 
@@ -806,7 +823,9 @@
   - 사용할곳에 taglib를 선언해 준다.
   - API **Table 27.1. Common built-in expressions**를 참고하여 사용
 
-#### 28. mybatis
+
+
+### 28. mybatis
 
 - mybatis를 사용하기 위해 먼저 bean설정이 필요
 
@@ -862,7 +881,7 @@
 
 
 
-#### 오류사항들 정리!!!
+### 오류사항들 정리!!!
 
 - Spring dependencies 버전의 문제
 
